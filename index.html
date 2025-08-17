@@ -1,50 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Meeting Summarizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      margin-top: 40px;
+      width: 600px;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+      color: #34495e;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #d0d7de;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+    }
+    button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #357ABD;
+    }
+    .actions {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+    .success {
+      background: #e6f9ec;
+      color: #2e7d32;
+      border: 1px solid #b2dfdb;
+    }
+    .error {
+      background: #fdecea;
+      color: #c62828;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
 </head>
 <body>
-  <h2>Upload Transcript</h2>
-  <textarea id="transcript" rows="10" cols="50"></textarea><br>
-  
-  <h3>Enter Prompt</h3>
-  <input type="text" id="prompt"><br><br>
+  <div class="container">
+    <h1>AI Meeting Summarizer</h1>
 
-  <button onclick="summarize()">Generate Summary</button>
+    <label for="transcript">Transcript</label>
+    <textarea id="transcript" rows="8" placeholder="Paste your meeting transcript here..."></textarea>
 
-  <h3>Summary</h3>
-  <textarea id="summary" rows="10" cols="50"></textarea><br>
+    <label for="prompt">Custom Prompt</label>
+    <input type="text" id="prompt" placeholder="e.g. Summarize only action items">
 
-  <h3>Send via Email</h3>
-  <input type="email" id="recipient" placeholder="recipient@example.com"><br><br>
-  <button onclick="sendEmail()">Send Email</button>
+    <div class="actions">
+      <button onclick="summarize()">Generate Summary</button>
+    </div>
+
+    <label for="summary">Summary</label>
+    <textarea id="summary" rows="6" placeholder="Generated summary will appear here..."></textarea>
+
+    <label for="recipient">Recipient Email</label>
+    <input type="email" id="recipient" placeholder="recipient@example.com">
+
+    <div class="actions">
+      <button onclick="sendEmail()">Send Email</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+  </div>
 
   <script>
     async function summarize() {
       const transcript = document.getElementById("transcript").value;
       const prompt = document.getElementById("prompt").value;
+      const statusBox = document.getElementById("statusBox");
+      statusBox.style.display = "none";
+
       const res = await fetch("http://localhost:8000/summarize", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ transcript, prompt })
       });
       const data = await res.json();
-      document.getElementById("summary").value = data.summary;
+      if (data.summary) {
+        document.getElementById("summary").value = data.summary;
+      } else {
+        statusBox.innerText = data.error || "Failed to generate summary";
+        statusBox.className = "status error";
+        statusBox.style.display = "block";
+      }
     }
 
-   async function sendEmail() {
-  const summary = document.getElementById("summary").value;
-  const recipient = document.getElementById("recipient").value;
+    async function sendEmail() {
+      const summary = document.getElementById("summary").value;
+      const recipient = document.getElementById("recipient").value;
+      const statusBox = document.getElementById("statusBox");
+      statusBox.style.display = "none";
 
-  const res = await fetch("http://localhost:8000/send-email", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ summary, recipient })
-  });
+      const res = await fetch("http://localhost:8000/send-email", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ summary, recipient })
+      });
+      const data = await res.json();
 
-  const data = await res.json();
-  alert(data.message);  // ✅ now always defined
-}
+      statusBox.style.display = "block";
+      if (data.message && data.message.includes("successfully")) {
+        statusBox.innerText = data.message;
+        statusBox.className = "status success";
+      } else {
+        statusBox.innerText = data.error || "Failed to send email";
+        statusBox.className = "status error";
+      }
+    }
   </script>
 </body>
 </html>

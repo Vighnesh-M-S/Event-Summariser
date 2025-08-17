@@ -53,7 +53,7 @@ def summarize(req: SummarizeRequest):
 @app.post("/send-email")
 def send_email(req: EmailRequest):
     message = Mail(
-        from_email="vighnesh21ms@gmail.com",
+        from_email= os.environ.get("email"),  # Load from .env file
         to_emails=req.recipient,
         subject="Meeting Summary",
         plain_text_content=req.summary
