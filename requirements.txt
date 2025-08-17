@@ -4,3 +4,6 @@ requests
 python-multipart
 groq
 sendgrid
+dotenv
+python-dotenv
+pydantic
