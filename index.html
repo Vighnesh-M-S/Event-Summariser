@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Meeting Summarizer</title>
+</head>
+<body>
+  <h2>Upload Transcript</h2>
+  <textarea id="transcript" rows="10" cols="50"></textarea><br>
+  
+  <h3>Enter Prompt</h3>
+  <input type="text" id="prompt"><br><br>
+
+  <button onclick="summarize()">Generate Summary</button>
+
+  <h3>Summary</h3>
+  <textarea id="summary" rows="10" cols="50"></textarea><br>
+
+  <h3>Send via Email</h3>
+  <input type="email" id="recipient" placeholder="recipient@example.com"><br><br>
+  <button onclick="sendEmail()">Send Email</button>
+
+  <script>
+    async function summarize() {
+      const transcript = document.getElementById("transcript").value;
+      const prompt = document.getElementById("prompt").value;
+      const res = await fetch("http://localhost:8000/summarize", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ transcript, prompt })
+      });
+      const data = await res.json();
+      document.getElementById("summary").value = data.summary;
+    }
+
+   async function sendEmail() {
+  const summary = document.getElementById("summary").value;
+  const recipient = document.getElementById("recipient").value;
+
+  const res = await fetch("http://localhost:8000/send-email", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ summary, recipient })
+  });
+
+  const data = await res.json();
+  alert(data.message);  // ✅ now always defined
+}
+  </script>
+</body>
+</html>
